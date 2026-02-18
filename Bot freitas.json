@@ -1,0 +1,285 @@
+{
+  "name": "Bot freitas",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "441bbdbc-c5e4-4e2f-8f14-da0ef2080ffa",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "56371a5f-c75e-47d6-84c3-a64b31a8d122",
+      "name": "Webhook",
+      "webhookId": "441bbdbc-c5e4-4e2f-8f14-da0ef2080ffa"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3ae7ec33-8d3c-4d6e-8c63-dc010971a0a4",
+              "name": "Quem mandou",
+              "value": "={{ $json.body.data.key.remoteJid }}",
+              "type": "string"
+            },
+            {
+              "id": "7b5fad92-e713-469e-a48b-c5c54252cb2c",
+              "name": "Instancia",
+              "value": "={{ $json.body.instance }}",
+              "type": "string"
+            },
+            {
+              "id": "59eb0fb5-f8d9-44ee-88ce-c1917719c099",
+              "name": "Mensagem",
+              "value": "={{ $json.body.data.message.conversation }}",
+              "type": "string"
+            },
+            {
+              "id": "40c0d87c-712d-4b2f-b14e-5f90cb5b5ce5",
+              "name": "id da mensagem",
+              "value": "={{ $json.body.data.key.id }}",
+              "type": "string"
+            },
+            {
+              "id": "557a8e26-5842-402c-bfce-628b8b7ebbac",
+              "name": "Nome da pesssoa",
+              "value": "={{ $json.body.data.pushName }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "846753d8-a212-4d82-a986-44b25a08a15b",
+      "name": "Dados"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "640dbe57-8090-40ac-965a-7e40a5843afc",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Dados').item.json.Mensagem }}",
+        "options": {
+          "systemMessage": "=Voce deve responder clientes sobre tecnologia,IA e inovaçõees com base em sites confiaveis da internet.\n\nNome do clientee: {{ $('Dados').item.json['Nome da pesssoa'] }}\n\nData Atual: {{ $now  }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "17f4f476-7d90-4457-9a91-c99ed38dfc57",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        480,
+        208
+      ],
+      "id": "b9a3ffc9-17ee-4806-970a-a63a4bf3890a",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "0ziCwYhQYBT4Ia9G",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Dados').item.json['Quem mandou'] }}",
+        "sessionTTL": 3600,
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        672,
+        224
+      ],
+      "id": "f6f10905-51c0-4950-98f6-d93daedcacde",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "8ELJ8An3iqu9AJvQ",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "chat-api",
+        "operation": "read-messages",
+        "instanceName": "={{ $('Dados').item.json.Instancia }}",
+        "remoteJid": "={{ $('Dados').item.json['Quem mandou'] }}",
+        "messageId": "={{ $('Dados').item.json['id da mensagem'] }}"
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        976,
+        0
+      ],
+      "id": "a89256c7-827f-4cd1-ac57-1c22534212dd",
+      "name": "Marcar mensagens como lidas",
+      "credentials": {
+        "evolutionApi": {
+          "id": "rJfH2RcLKO30z8sa",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "={{ $('Dados').item.json.Instancia }}",
+        "remoteJid": "={{ $('Dados').item.json['Quem mandou'] }}",
+        "messageText": "={{ $('AI Agent').item.json.output }}",
+        "options_message": {
+          "delay": 3000,
+          "linkPreview": true
+        }
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        1248,
+        0
+      ],
+      "id": "85ea4625-57f5-493d-916a-2a56539cb091",
+      "name": "Enviar texto",
+      "credentials": {
+        "evolutionApi": {
+          "id": "rJfH2RcLKO30z8sa",
+          "name": "Evolution account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Marcar mensagens como lidas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar mensagens como lidas": {
+      "main": [
+        [
+          {
+            "node": "Enviar texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1
+  },
+  "versionId": "430f9ee1-fc52-4d5f-bb26-37ad7b72204f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "11fe020c4e487884fe31a1721c9d9b9676d5f2d8ebd69386205eb1c193680586"
+  },
+  "id": "I5e7ZLes16et4L2YDYtfq",
+  "tags": []
+}
