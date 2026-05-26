@@ -61,7 +61,7 @@ services:
 
   # Serviço Evolution API
   evolution_v2:
-    image: evoapicloud/evolution-api:latest
+    image: evoapicloud/evolution-api:v2.3.7
     container_name: evolution_v2
     volumes:
       - ./evolution_instancesv2:/evolution/instances
@@ -188,42 +188,29 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  # Serviço n8n.io
-  n8n:
-    image: n8nio/n8n:latest
-    container_name: n8n
-    environment:
-      - GENERIC_TIMEZONE=America/Sao_Paulo
-      - WEBHOOK_URL=http://localhost:5678
-      - N8N_REDIS_HOST=redis_n8n
-      - N8N_REDIS_PORT=6379
-      - N8N_REDIS_PASSWORD=${N8N_REDIS_PASSWORD}
+  # Serviço Bot TypeScript
+  bot:
+    build:
+      context: ./bot-ts
+      dockerfile: Dockerfile
+    container_name: bot_service
     volumes:
-      - ./n8n_data:/home/node/.n8n
+      - ./bot-ts/data:/app/data
+    environment:
+      - PORT=3000
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres_db:5432/bot_db
+      - REDIS_URL=redis://redis_service:6379/1
+      - EVOLUTION_API_URL=http://evolution_v2:8080
+      - EVOLUTION_API_KEY=KFZOm3Hc3GSNWwHBywEm67xYgjN8xGTH
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
     ports:
-      - "5678:5678"
+      - "3000:3000"
     networks:
       - rede_geral
-    restart: always
-
-  # Serviço Redis para n8n
-  redis_n8n:
-    image: redis:latest
-    container_name: redis_n8n
-    command:
-      [
-        "redis-server",
-        "--requirepass",
-        "${N8N_REDIS_PASSWORD}",
-        "--appendonly",
-        "yes",
-        "--port",
-        "6379",
-      ]
-    ports:
-      - "6380:6379"
-    networks:
-      - rede_geral
+    depends_on:
+      - redis
+      - postgres
+      - evolution_v2
     restart: always
 
 volumes:
@@ -236,9 +223,6 @@ volumes:
   evolution_instancesv2:
     external: false
     name: evolution_instancesv2
-  n8n_data:
-    external: false
-    name: n8n_data
 
 networks:
   rede_geral:
