@@ -1,0 +1,6 @@
+﻿chore(repo): restructure directories for omnichannel migration
+
+- Move existing WhatsApp bot code to whatsapp/ directory
+- Create placeholder frontend/ and backend/ directories for upcoming Next.js and NestJS apps
+- Add structured Use Cases document (docs/regras-de-negocio/casos-de-uso.md)
+- Update gitignore to exclude .gemini metadata
