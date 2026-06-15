@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { migrate } from 'drizzle-orm/mysql2/migrator';
 import * as path from 'path';
-import mysql from 'mysql2/promise';
+import { createConnection } from 'mysql2/promise';
 import { env } from './config/env';
 import { DB, DrizzleDB } from './database/database.module';
 
@@ -12,7 +12,7 @@ async function ensureDatabaseExists(connectionString: string): Promise<void> {
   if (!targetDb) return;
   if (!/^[a-zA-Z0-9_]+$/.test(targetDb)) throw new Error(`Invalid DB name: ${targetDb}`);
 
-  const connection = await mysql.createConnection({
+  const connection = await createConnection({
     host: url.hostname,
     port: parseInt(url.port || '3306'),
     user: url.username,
