@@ -20,7 +20,7 @@ npm run db:generate  # Generate Drizzle migrations from schema changes
 npm run db:migrate   # Apply pending migrations to the database
 ```
 
-There are no tests configured yet.
+There are no tests configured yet. For local development, create a `.env` file in `whatsapp/naia-atendimento/` with the required variables — `dotenv` loads it automatically at startup.
 
 ## Required Environment Variables
 
@@ -50,13 +50,16 @@ Evolution API → POST /webhook → WebhookController
   → send reply (EvolutionService → Evolution API)
 ```
 
+The server (Fastify with Pino structured logging) exposes two routes: `POST /webhook` for Evolution API events and `GET /health` for uptime checks.
+
 The webhook handler returns `{ status: "received" }` immediately and processes asynchronously to avoid Evolution API retry timeouts (must respond within 200ms).
 
 ### Key Design Decisions
 
 - **Dual persistence**: Redis stores a sliding window of the last 10 messages (1-hour TTL) for low-latency Gemini context. Postgres stores the full audit log via Drizzle ORM.
 - **Gemini chat format**: Redis history uses `{ role: "user"|"model", parts: [{ text }] }` — Gemini's native `Content[]` shape. Note the `messages` table uses `"assistant"` for the role column, which differs from the Redis/Gemini `"model"` role.
-- **AI resilience**: `AIService` retries the primary model (`gemini-2.5-flash`) up to 3 times with progressive backoff, then falls back to a secondary model. 400/401/403 errors are not retried.
+- **AI resilience**: `AIService` retries the primary model (`gemini-2.5-flash`) up to 3 times with progressive backoff (1.5 s × attempt), then falls back to `gemini-3.1-flash-lite` (2 attempts). 400/401/403 errors skip retries entirely.
+- **Portuguese-only**: The system prompt, default push name (`"Cliente"`), date format (`America/Sao_Paulo`), and fallback error message are all hardcoded in Brazilian Portuguese — the bot is not language-agnostic.
 - **PDF knowledge base**: Place PDF files in the `data/` directory. `PDFService` reads them all, concatenates their text, caches the result in memory (invalidated by file mtime), and injects the content into the Gemini system prompt.
 - **Message filtering**: Only `messages.upsert` events from private chats (`@s.whatsapp.net`) are processed. Group chats, broadcast lists, and self-sent messages are silently dropped.
 - **Database auto-creation**: On startup, `ensureDatabaseExists()` connects to the `postgres` control database and creates the target DB if it doesn't exist — useful for fresh Docker environments.
