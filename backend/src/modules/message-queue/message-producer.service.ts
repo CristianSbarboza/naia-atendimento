@@ -9,7 +9,7 @@ export class MessageProducerService {
 
   async enqueue(job: MessageJob): Promise<void> {
     await this.queue.add('process-message', job, {
-      jobId: job.jid,
+      jobId: job.messageId,
       removeOnComplete: true,
       removeOnFail: 100,
     });

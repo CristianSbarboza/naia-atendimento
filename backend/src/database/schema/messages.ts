@@ -1,8 +1,8 @@
-import { mysqlTable, varchar, text, timestamp } from 'drizzle-orm/mysql-core';
+import { pgTable, varchar, text, timestamp } from 'drizzle-orm/pg-core';
 import { conversations } from './conversations';
 import { users } from './users';
 
-export const messages = mysqlTable('messages', {
+export const messages = pgTable('messages', {
   id: varchar('id', { length: 100 }).primaryKey(),
   conversationId: varchar('conversation_id', { length: 36 })
     .notNull()

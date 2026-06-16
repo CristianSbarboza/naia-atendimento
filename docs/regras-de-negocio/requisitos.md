@@ -60,7 +60,7 @@
 * **RNF-005**: O endpoint de recepção de webhooks deve retornar status de sucesso `200 OK` para o integrador externo em um tempo máximo inferior a **200ms**, delegando o ciclo computacional pesado da IA para trabalhadores (*Workers*) em segundo plano.
 
 ### 3. Isolamento, Segurança e Persistência
-* **RNF-006**: O banco de dados relacional oficial do ecossistema deve ser o **PostgreSQL 16+**.
+* **RNF-006**: O banco de dados relacional oficial do ecossistema deve ser o **MySQL 8+**.
 * **RNF-007**: Para o canal Frontend Puro (Web Chat em sites de terceiros), o sistema deve aplicar travas rigorosas de segurança via cabeçalhos de **CORS** (Cross-Origin Resource Sharing) e validações de origem combinadas a tokens públicos associados unicamente ao escopo limitado daquele Tenant.
 * **RNF-008**: O histórico rápido de contexto deslizante em memória (Redis) estruturado para o Gemini deve conter no máximo as últimas 10 interações e possuir um tempo de expiração automática (TTL de 1 hora) para prevenir vazamento e esgotamento de memória de cache.
 

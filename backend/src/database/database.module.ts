@@ -1,10 +1,10 @@
 import { Global, Module } from '@nestjs/common';
-import { createPool } from 'mysql2/promise';
-import { drizzle, MySql2Database } from 'drizzle-orm/mysql2';
+import { Pool } from 'pg';
+import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from './schema';
 import { env } from '../config/env';
 
-export type DrizzleDB = MySql2Database<typeof schema>;
+export type DrizzleDB = NodePgDatabase<typeof schema>;
 export const DB = Symbol('DRIZZLE_DB');
 
 @Global()
@@ -13,8 +13,8 @@ export const DB = Symbol('DRIZZLE_DB');
     {
       provide: DB,
       useFactory: () => {
-        const pool = createPool(env.DATABASE_URL);
-        return drizzle(pool, { schema, mode: 'default' });
+        const pool = new Pool({ connectionString: env.DATABASE_URL });
+        return drizzle(pool, { schema });
       },
     },
   ],

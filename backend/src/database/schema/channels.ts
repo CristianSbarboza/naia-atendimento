@@ -1,4 +1,4 @@
-import { mysqlTable, varchar, text, json, timestamp } from 'drizzle-orm/mysql-core';
+import { pgTable, varchar, text, json, timestamp } from 'drizzle-orm/pg-core';
 import { randomUUID } from 'crypto';
 import { tenants } from './tenants';
 
@@ -14,7 +14,7 @@ export interface WebChatChannelConfig {
 
 export type ChannelConfig = WhatsAppChannelConfig | WebChatChannelConfig;
 
-export const channels = mysqlTable('channels', {
+export const channels = pgTable('channels', {
   id: varchar('id', { length: 36 }).primaryKey().$defaultFn(() => randomUUID()),
   tenantId: varchar('tenant_id', { length: 36 })
     .notNull()

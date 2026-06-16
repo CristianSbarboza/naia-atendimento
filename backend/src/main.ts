@@ -1,8 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { migrate } from 'drizzle-orm/mysql2/migrator';
+import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import * as path from 'path';
-import { createConnection } from 'mysql2/promise';
+import { Client } from 'pg';
 import { env } from './config/env';
 import { DB, DrizzleDB } from './database/database.module';
 
@@ -12,19 +12,24 @@ async function ensureDatabaseExists(connectionString: string): Promise<void> {
   if (!targetDb) return;
   if (!/^[a-zA-Z0-9_]+$/.test(targetDb)) throw new Error(`Invalid DB name: ${targetDb}`);
 
-  const connection = await createConnection({
+  const client = new Client({
     host: url.hostname,
-    port: parseInt(url.port || '3306'),
+    port: parseInt(url.port || '5432'),
     user: url.username,
     password: url.password,
+    database: 'postgres',
   });
 
+  await client.connect();
   try {
     console.log(`🔨 Ensuring database "${targetDb}" exists...`);
-    await connection.query(`CREATE DATABASE IF NOT EXISTS \`${targetDb}\``);
+    const res = await client.query(`SELECT 1 FROM pg_database WHERE datname = $1`, [targetDb]);
+    if (res.rowCount === 0) {
+      await client.query(`CREATE DATABASE "${targetDb}"`);
+    }
     console.log(`✅ Database "${targetDb}" ready.`);
   } finally {
-    await connection.end();
+    await client.end();
   }
 }
 

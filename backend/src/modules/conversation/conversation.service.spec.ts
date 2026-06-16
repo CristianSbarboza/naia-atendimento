@@ -4,7 +4,7 @@ import { DB } from '../../database/database.module';
 
 const mockInsert = {
   values: jest.fn().mockReturnThis(),
-  onDuplicateKeyUpdate: jest.fn().mockResolvedValue({ rowsAffected: 1 }),
+  onConflictDoUpdate: jest.fn().mockResolvedValue({ rowsAffected: 1 }),
 };
 const mockSelectChain = {
   from: jest.fn().mockReturnThis(),

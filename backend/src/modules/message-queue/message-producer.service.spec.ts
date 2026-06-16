@@ -22,7 +22,7 @@ describe('MessageProducerService', () => {
     mockAdd.mockClear();
   });
 
-  it('should enqueue job with jid as jobId', async () => {
+  it('should enqueue job with messageId as jobId', async () => {
     const job: MessageJob = {
       jid: '5511999999999@s.whatsapp.net',
       messageId: 'msg-001',
@@ -38,7 +38,7 @@ describe('MessageProducerService', () => {
     expect(mockAdd).toHaveBeenCalledWith(
       'process-message',
       job,
-      expect.objectContaining({ jobId: job.jid }),
+      expect.objectContaining({ jobId: job.messageId }),
     );
   });
 });

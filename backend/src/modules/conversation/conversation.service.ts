@@ -30,7 +30,10 @@ export class ConversationService {
     await this.db
       .insert(contacts)
       .values({ tenantId, phone, name: name ?? null })
-      .onDuplicateKeyUpdate({ set: { updatedAt: new Date() } });
+      .onConflictDoUpdate({
+        target: [contacts.tenantId, contacts.phone],
+        set: { name: name ?? null, updatedAt: new Date() },
+      });
 
     const [contact] = await this.db
       .select()

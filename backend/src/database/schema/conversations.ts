@@ -1,11 +1,11 @@
-import { mysqlTable, varchar, timestamp } from 'drizzle-orm/mysql-core';
+import { pgTable, varchar, timestamp } from 'drizzle-orm/pg-core';
 import { randomUUID } from 'crypto';
 import { tenants } from './tenants';
 import { contacts } from './contacts';
 import { channels } from './channels';
 import { users } from './users';
 
-export const conversations = mysqlTable('conversations', {
+export const conversations = pgTable('conversations', {
   id: varchar('id', { length: 36 }).primaryKey().$defaultFn(() => randomUUID()),
   tenantId: varchar('tenant_id', { length: 36 })
     .notNull()

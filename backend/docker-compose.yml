@@ -1,32 +1,184 @@
-version: '3.9'
 services:
-  mysql:
-    image: mysql:8
+  postgres:
+    image: postgres:16
+    container_name: postgres_db
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_USER: naia
-      MYSQL_PASSWORD: naia
-      MYSQL_DATABASE: naia_atendimento
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: evolution
     ports:
-      - '3306:3306'
+      - '5432:5432'
     volumes:
-      - mysql_data:/var/lib/mysql
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - rede_geral
+    restart: always
     healthcheck:
-      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'naia', '-pnaia']
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 10s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
+    container_name: redis_service
+    command: ['redis-server', '--appendonly', 'yes']
     ports:
       - '6379:6379'
+    volumes:
+      - redis_data:/data
+    networks:
+      - rede_geral
+    restart: always
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
 
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - '5433:80'
+    networks:
+      - rede_geral
+    restart: always
+    depends_on:
+      - postgres
+
+  evolution_v2:
+    image: evoapicloud/evolution-api:v2.3.7
+    container_name: evolution_v2
+    volumes:
+      - evolution_instancesv2:/evolution/instances
+    networks:
+      - rede_geral
+    ports:
+      - '8080:8080'
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - SERVER_URL=http://localhost:8080
+      - AUTHENTICATION_TYPE=apikey
+      - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY}
+      - AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES=true
+      - LANGUAGE=pt-BR
+      - CONFIG_SESSION_PHONE_CLIENT=InovaBoost
+      - CONFIG_SESSION_PHONE_NAME=chrome
+      - CONFIG_SESSION_PHONE_VERSION=2.3000.1031870451
+      - CONFIG_SESSION_PHONE_SYNC_FULL_HISTORY=false
+      - CONFIG_SESSION_PHONE_MAX_HISTORY=0
+      - WA_BUSINESS_TOKEN_WEBHOOK=evolution
+      - WA_BUSINESS_URL=https://graph.facebook.com
+      - WA_BUSINESS_VERSION=v20.0
+      - WA_BUSINESS_LANGUAGE=pt_BR
+      - QRCODE_LIMIT=1902
+      - QRCODE_COLOR=#000000
+      - DATABASE_ENABLED=true
+      - DATABASE_PROVIDER=postgresql
+      - DATABASE_CONNECTION_URI=postgresql://postgres:${POSTGRES_PASSWORD}@postgres_db:5432/evolution
+      - DATABASE_CONNECTION_CLIENT_NAME=evolution
+      - DATABASE_SAVE_DATA_INSTANCE=true
+      - DATABASE_SAVE_DATA_NEW_MESSAGE=true
+      - DATABASE_SAVE_MESSAGE_UPDATE=true
+      - DATABASE_SAVE_DATA_CONTACTS=false
+      - DATABASE_SAVE_DATA_CHATS=false
+      - DASHBOARD_ENABLED=true
+      - OPENAI_ENABLED=false
+      - DIFY_ENABLED=false
+      - S3_ENABLED=false
+      - S3_ACCESS_KEY=
+      - S3_SECRET_KEY=
+      - S3_BUCKET=evolution
+      - S3_PORT=443
+      - S3_ENDPOINT=
+      - S3_USE_SSL=true
+      - CACHE_REDIS_ENABLED=true
+      - CACHE_REDIS_URI=redis://redis_service:6379/2
+      - CACHE_REDIS_PREFIX_KEY=evolution
+      - CACHE_REDIS_SAVE_INSTANCES=false
+      - CACHE_LOCAL_ENABLED=false
+      - DEL_INSTANCE=2
+      - DEL_TEMP_INSTANCES=false
+      - TYPEBOT_ENABLED=true
+      - TYPEBOT_API_VERSION=latest
+      - CHATWOOT_ENABLED=false
+      - CHATWOOT_MESSAGE_READ=true
+      - CHATWOOT_MESSAGE_DELETE=true
+      - CHATWOOT_IMPORT_PLACEHOLDER_MEDIA_MESSAGE=false
+      - RABBITMQ_ENABLED=false
+      - WEBHOOK_GLOBAL_ENABLED=false
+      - WEBHOOK_GLOBAL_URL=
+      - WEBHOOK_GLOBAL_WEBHOOK_BY_EVENTS=false
+      - WEBHOOK_EVENTS_APPLICATION_STARTUP=false
+      - WEBHOOK_EVENTS_QRCODE_UPDATED=true
+      - WEBHOOK_EVENTS_MESSAGES_SET=false
+      - WEBHOOK_EVENTS_MESSAGES_UPSERT=true
+      - WEBHOOK_EVENTS_MESSAGES_EDITED=true
+      - WEBHOOK_EVENTS_MESSAGES_UPDATE=true
+      - WEBHOOK_EVENTS_MESSAGES_DELETE=true
+      - WEBHOOK_EVENTS_SEND_MESSAGE=true
+      - WEBHOOK_EVENTS_CONTACTS_SET=false
+      - WEBHOOK_EVENTS_CONTACTS_UPSERT=true
+      - WEBHOOK_EVENTS_CONTACTS_UPDATE=true
+      - WEBHOOK_EVENTS_PRESENCE_UPDATE=true
+      - WEBHOOK_EVENTS_CHATS_SET=false
+      - WEBHOOK_EVENTS_CHATS_UPSERT=true
+      - WEBHOOK_EVENTS_CHATS_UPDATE=true
+      - WEBHOOK_EVENTS_CHATS_DELETE=true
+      - WEBHOOK_EVENTS_GROUPS_UPSERT=true
+      - WEBHOOK_EVENTS_GROUPS_UPDATE=true
+      - WEBHOOK_EVENTS_GROUP_PARTICIPANTS_UPDATE=true
+      - WEBHOOK_EVENTS_CONNECTION_UPDATE=true
+      - WEBHOOK_EVENTS_LABELS_EDIT=true
+      - WEBHOOK_EVENTS_LABELS_ASSOCIATION=false
+      - WEBHOOK_EVENTS_CALL=true
+      - WEBHOOK_EVENTS_TYPEBOT_START=false
+      - WEBHOOK_EVENTS_TYPEBOT_CHANGE_STATUS=false
+      - WEBHOOK_EVENTS_ERRORS=false
+      - WEBHOOK_EVENTS_ERRORS_WEBHOOK=
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+
+  # TODO: criar Dockerfile antes de habilitar
+  # backend:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: naia_backend
+  #   env_file: .env
+  #   environment:
+  #     - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres_db:5432/naia_atendimento
+  #     - REDIS_URL=redis://redis_service:6379/0
+  #     - EVOLUTION_API_URL=http://evolution_v2:8080
+  #   ports:
+  #     - '3000:3000'
+  #   networks:
+  #     - rede_geral
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   restart: always
+
 volumes:
-  mysql_data:
+  postgres_data:
+  redis_data:
+  evolution_instancesv2:
+
+networks:
+  rede_geral:
+    external: true
+    name: rede_geral
