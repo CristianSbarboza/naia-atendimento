@@ -10,6 +10,8 @@ const envSchema = z.object({
   EVOLUTION_API_URL: z.string().url(),
   EVOLUTION_API_KEY: z.string().min(1),
   GEMINI_API_KEY: z.string().min(1),
+  JWT_SECRET: z.string().min(32),
+  JWT_EXPIRES_IN: z.string().default('1d'),
 });
 
 const _env = envSchema.safeParse(process.env);

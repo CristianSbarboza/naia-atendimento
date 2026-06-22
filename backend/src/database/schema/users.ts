@@ -3,8 +3,12 @@ import { randomUUID } from 'crypto';
 import { tenants } from './tenants';
 
 export const users = pgTable('users', {
-  id: varchar('id', { length: 36 }).primaryKey().$defaultFn(() => randomUUID()),
-  tenantId: varchar('tenant_id', { length: 36 }).references(() => tenants.id, { onDelete: 'cascade' }),
+  id: varchar('id', { length: 36 })
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  tenantId: varchar('tenant_id', { length: 36 }).references(() => tenants.id, {
+    onDelete: 'cascade',
+  }),
   email: varchar('email', { length: 255 }).notNull().unique(),
   passwordHash: text('password_hash').notNull(),
   name: varchar('name', { length: 255 }).notNull(),
