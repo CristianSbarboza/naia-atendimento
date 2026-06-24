@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import * as path from 'path';
@@ -10,7 +11,8 @@ async function ensureDatabaseExists(connectionString: string): Promise<void> {
   const url = new URL(connectionString);
   const targetDb = url.pathname.substring(1);
   if (!targetDb) return;
-  if (!/^[a-zA-Z0-9_]+$/.test(targetDb)) throw new Error(`Invalid DB name: ${targetDb}`);
+  if (!/^[a-zA-Z0-9_]+$/.test(targetDb))
+    throw new Error(`Invalid DB name: ${targetDb}`);
 
   const client = new Client({
     host: url.hostname,
@@ -23,7 +25,10 @@ async function ensureDatabaseExists(connectionString: string): Promise<void> {
   await client.connect();
   try {
     console.log(`🔨 Ensuring database "${targetDb}" exists...`);
-    const res = await client.query(`SELECT 1 FROM pg_database WHERE datname = $1`, [targetDb]);
+    const res = await client.query(
+      `SELECT 1 FROM pg_database WHERE datname = $1`,
+      [targetDb],
+    );
     if (res.rowCount === 0) {
       await client.query(`CREATE DATABASE "${targetDb}"`);
     }
@@ -38,6 +43,7 @@ async function bootstrap(): Promise<void> {
 
   const app = await NestFactory.create(AppModule);
   app.enableCors();
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
 
   const db = app.get<DrizzleDB>(DB);
   const migrationsFolder = path.join(__dirname, 'database', 'migrations');
