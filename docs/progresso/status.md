@@ -1,6 +1,6 @@
 # Status de Desenvolvimento — Naia Atendimento
 
-> Atualizado em: 2026-07-06 — API de gestão completa, iniciando Web Chat
+> Atualizado em: 2026-07-06 — Web Chat Parte 1 concluída
 
 ---
 
@@ -16,21 +16,22 @@
 - [x] **HandoffModule** — operador assume conversa (takeover) e devolve ao bot (return-to-bot)
 - [x] **Seed script** — criação de super_admin via CLI
 - [x] **Documentação de rotas** — `docs/api/rotas.md`
+- [x] **Web Chat — Parte 1 (Gateway)** — Socket.IO `/webchat`, eventos `join`/`message`, `WebChatSessionService`, `findByPublicToken`, `WEBCHAT_QUEUE`
 
 ---
 
 ## Pendente
 
-### Web Chat (próximo bloco)
+### Web Chat
 
-- [ ] **WebSocket Gateway** — canal de comunicação em tempo real para o Web Chat
-  - Refs: RF-012
-- [ ] **Canal Web Chat + token público** — ativação por tenant com identificador para embed em sites
-  - Refs: RF-005, CSU-005
-- [ ] **Pré-atendimento + vínculo omnichannel** — formulário Nome/WhatsApp + unificação de Contato existente ou criação de novo
-  - Refs: RF-009, RF-010, CSU-012
-- [ ] **Envio de mensagem via Web Chat** — enfileirar no BullMQ e processar igual ao WhatsApp
-  - Refs: RF-013, CSU-013
+- [ ] **Parte 2 — Processador** — worker do `WEBCHAT_QUEUE`: IA responde via WebSocket pela room da conversa
+  - Refs: RF-012, RF-013
+- [ ] **Parte 3 — Resposta humana + despacho inteligente** — operador responde; prioriza Web Chat se sessão ativa, senão WhatsApp
+  - Refs: RF-020, CSU-009
+- [ ] **Parte 4 — Linha do tempo unificada** — API `GET .../conversations/:id/messages` (WhatsApp + Web Chat ordenados)
+  - Refs: RF-017, CSU-007
+- [ ] **Parte 5 — Segurança** — CORS dinâmico por `corsOrigins` do canal + anti prompt-injection no `AiService`
+  - Refs: RF-024, RNF-007
 
 ### Painel de atendimento humano
 

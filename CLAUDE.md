@@ -86,6 +86,14 @@ The webhook handler returns `{ status: "received" }` immediately and processes a
 
 The file must include: HTTP method, path, auth requirement, required role, request body (if any), and response format. This applies to all controllers in `backend/src/modules/`.
 
+## Progress Status Rule
+
+**Every time a feature or planned part is completed, `docs/progresso/status.md` must be updated before committing.**
+
+- Move the item from **Pendente** to **Concluído** (mark with `[x]`).
+- Update the `> Atualizado em:` line with the current date and a short note.
+- This applies to any item that appears in the status file — modules, Web Chat parts, security items, etc.
+
 ## Planned Evolution (from `docs/`)
 
 The requirements docs (`docs/regras-de-negocio/`) describe the full SaaS vision: multitenancy with RBAC, Web Chat via WebSockets, BullMQ-based async message queues, human handoff (bot_active ↔ human_agent status), and a NestJS rewrite. The current codebase is the single-tenant MVP that proves the core AI loop before the full architecture is built.
