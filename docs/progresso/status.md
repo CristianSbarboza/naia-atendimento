@@ -1,6 +1,6 @@
 # Status de Desenvolvimento — Naia Atendimento
 
-> Atualizado em: 2026-07-06
+> Atualizado em: 2026-07-06 — API de gestão completa, iniciando Web Chat
 
 ---
 
@@ -11,6 +11,7 @@
 - [x] **AuthModule** — login JWT (`POST /auth/login`)
 - [x] **RBAC** — `JwtAuthGuard`, `RolesGuard`, `TenantScopeGuard`, decorators `@Public`, `@Roles`, `@CurrentUser`
 - [x] **TenantsModule** — CRUD de tenants (super_admin) + auto-cadastro público (`POST /register`)
+- [x] **UsersModule** — CRUD de atendentes por tenant (`/tenants/:tenantId/users`)
 - [x] **ChannelsModule** — CRUD de canais WhatsApp por tenant
 - [x] **HandoffModule** — operador assume conversa (takeover) e devolve ao bot (return-to-bot)
 - [x] **Seed script** — criação de super_admin via CLI
@@ -20,12 +21,7 @@
 
 ## Pendente
 
-### Alta prioridade (desbloqueia operação do sistema)
-
-- [ ] **UsersModule** — CRUD de atendentes por tenant (controller está vazio)
-  - Refs: RF-002, CSU-003
-
-### Web Chat (bloco principal)
+### Web Chat (próximo bloco)
 
 - [ ] **WebSocket Gateway** — canal de comunicação em tempo real para o Web Chat
   - Refs: RF-012
