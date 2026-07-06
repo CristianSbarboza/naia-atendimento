@@ -80,6 +80,12 @@ The webhook handler returns `{ status: "received" }` immediately and processes a
 | `EvolutionService` | HTTP calls to Evolution API (send text, mark as read) |
 | `PDFService` | Reads/caches PDF files from `data/` for knowledge base injection |
 
+## Route Documentation Rule
+
+**Every time a new route is created or modified, it must be documented in `docs/api/rotas.md`.**
+
+The file must include: HTTP method, path, auth requirement, required role, request body (if any), and response format. This applies to all controllers in `backend/src/modules/`.
+
 ## Planned Evolution (from `docs/`)
 
 The requirements docs (`docs/regras-de-negocio/`) describe the full SaaS vision: multitenancy with RBAC, Web Chat via WebSockets, BullMQ-based async message queues, human handoff (bot_active ↔ human_agent status), and a NestJS rewrite. The current codebase is the single-tenant MVP that proves the core AI loop before the full architecture is built.
