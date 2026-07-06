@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConversationService } from './conversation.service';
 import { DB } from '../../database/database.module';
+import { ChannelsService } from '../channels/channels.service';
 
 const mockInsert = {
   values: jest.fn().mockReturnThis(),
@@ -17,6 +18,8 @@ const mockDb = {
   insert: jest.fn().mockReturnValue(mockInsert),
 };
 
+const mockChannelsService = { findByInstanceName: jest.fn() };
+
 describe('ConversationService', () => {
   let service: ConversationService;
 
@@ -29,6 +32,7 @@ describe('ConversationService', () => {
       providers: [
         ConversationService,
         { provide: DB, useValue: mockDb },
+        { provide: ChannelsService, useValue: mockChannelsService },
       ],
     }).compile();
     service = module.get<ConversationService>(ConversationService);
@@ -37,16 +41,16 @@ describe('ConversationService', () => {
   describe('findChannelByInstance', () => {
     it('returns channel when found', async () => {
       const fakeChannel = { id: 'ch-uuid', instanceName: 'my-instance', tenantId: 'ten-uuid' };
-      mockSelectChain.limit.mockResolvedValue([fakeChannel]);
+      mockChannelsService.findByInstanceName.mockResolvedValue(fakeChannel);
 
       const result = await service.findChannelByInstance('my-instance');
 
       expect(result).toEqual(fakeChannel);
-      expect(mockDb.select).toHaveBeenCalled();
+      expect(mockChannelsService.findByInstanceName).toHaveBeenCalledWith('my-instance');
     });
 
     it('returns null when not found', async () => {
-      mockSelectChain.limit.mockResolvedValue([]);
+      mockChannelsService.findByInstanceName.mockResolvedValue(null);
       const result = await service.findChannelByInstance('missing-instance');
       expect(result).toBeNull();
     });

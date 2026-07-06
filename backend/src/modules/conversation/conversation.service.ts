@@ -2,28 +2,21 @@ import { Inject, Injectable } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { DB, DrizzleDB } from '../../database/database.module';
-import { channels, Channel } from '../../database/schema/channels';
+import { Channel } from '../../database/schema/channels';
 import { contacts, Contact } from '../../database/schema/contacts';
 import { conversations, Conversation } from '../../database/schema/conversations';
 import { messages } from '../../database/schema/messages';
+import { ChannelsService } from '../channels/channels.service';
 
 @Injectable()
 export class ConversationService {
-  constructor(@Inject(DB) private readonly db: DrizzleDB) {}
+  constructor(
+    @Inject(DB) private readonly db: DrizzleDB,
+    private readonly channelsService: ChannelsService,
+  ) {}
 
   async findChannelByInstance(instanceName: string): Promise<Channel | null> {
-    const [channel] = await this.db
-      .select()
-      .from(channels)
-      .where(
-        and(
-          eq(channels.instanceName, instanceName),
-          eq(channels.type, 'whatsapp'),
-          eq(channels.status, 'active'),
-        ),
-      )
-      .limit(1);
-    return channel ?? null;
+    return this.channelsService.findByInstanceName(instanceName);
   }
 
   async upsertContact(tenantId: string, phone: string, name?: string): Promise<Contact> {
