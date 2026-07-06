@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { DB, DrizzleDB } from '../../database/database.module';
 import { Channel, ChannelConfig, channels } from '../../database/schema/channels';
 
@@ -67,5 +67,20 @@ export class ChannelsService {
 
   async deactivate(id: string, tenantId: string): Promise<Channel | null> {
     return this.update(id, tenantId, { status: 'inactive' });
+  }
+
+  async findByPublicToken(publicToken: string): Promise<Channel | null> {
+    const [channel] = await this.db
+      .select()
+      .from(channels)
+      .where(
+        and(
+          sql`${channels.config}->>'publicToken' = ${publicToken}`,
+          eq(channels.type, 'webchat'),
+          eq(channels.status, 'active'),
+        ),
+      )
+      .limit(1);
+    return channel ?? null;
   }
 }

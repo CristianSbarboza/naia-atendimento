@@ -152,4 +152,23 @@ describe('ChannelsService', () => {
       expect(result?.status).toBe('inactive');
     });
   });
+
+  describe('findByPublicToken', () => {
+    it('returns active webchat channel when token matches', async () => {
+      const webChatChannel = { ...fakeChannel, type: 'webchat', config: { publicToken: 'tok-abc', corsOrigins: [] } };
+      mockSelectChain.limit.mockResolvedValue([webChatChannel]);
+
+      const result = await service.findByPublicToken('tok-abc');
+
+      expect(result).toEqual(webChatChannel);
+    });
+
+    it('returns null when token not found', async () => {
+      mockSelectChain.limit.mockResolvedValue([]);
+
+      const result = await service.findByPublicToken('token-invalido');
+
+      expect(result).toBeNull();
+    });
+  });
 });
