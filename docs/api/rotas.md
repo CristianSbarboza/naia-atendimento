@@ -320,6 +320,99 @@ Desativa um canal (`status: inactive`). Não remove do banco.
 
 ---
 
+## Human Handoff — Painel do Operador
+
+> Rotas aninhadas sob `/tenants/:tenantId/conversations`. Acessíveis por `operator`, `tenant_admin` e `super_admin`. O `TenantScopeGuard` garante isolamento de dados entre tenants.
+
+### `GET /tenants/:tenantId/conversations`
+Lista conversas do tenant. Aceita filtro por status.
+
+| Campo | Valor |
+|---|---|
+| **Auth** | JWT obrigatório |
+| **Role** | `operator`, `tenant_admin`, `super_admin` |
+| **Query** | `status` (opcional) — `bot_active` ou `human_agent` |
+
+**Response 200**
+```json
+[
+  {
+    "id": "uuid",
+    "tenantId": "uuid",
+    "contactId": "uuid",
+    "channelId": "uuid",
+    "status": "bot_active",
+    "assignedOperatorId": null,
+    "createdAt": "...",
+    "updatedAt": "..."
+  }
+]
+```
+
+---
+
+### `GET /tenants/:tenantId/conversations/:conversationId`
+Retorna uma conversa específica.
+
+| Campo | Valor |
+|---|---|
+| **Auth** | JWT obrigatório |
+| **Role** | `operator`, `tenant_admin`, `super_admin` |
+
+**Response 200** — objeto Conversation
+
+**Erros**
+- `404` — conversa não encontrada
+
+---
+
+### `PATCH /tenants/:tenantId/conversations/:conversationId/takeover`
+Operador assume a conversa — muda `status` para `human_agent` e registra `assignedOperatorId` a partir do token JWT.
+
+| Campo | Valor |
+|---|---|
+| **Auth** | JWT obrigatório |
+| **Role** | `operator`, `tenant_admin`, `super_admin` |
+
+**Response 200**
+```json
+{
+  "id": "uuid",
+  "status": "human_agent",
+  "assignedOperatorId": "uuid-do-operador",
+  "updatedAt": "..."
+}
+```
+
+**Erros**
+- `404` — conversa não encontrada
+- `403` — conversa pertence a outro tenant
+
+---
+
+### `PATCH /tenants/:tenantId/conversations/:conversationId/return-to-bot`
+Devolve a conversa ao bot — muda `status` para `bot_active` e limpa `assignedOperatorId`.
+
+| Campo | Valor |
+|---|---|
+| **Auth** | JWT obrigatório |
+| **Role** | `operator`, `tenant_admin`, `super_admin` |
+
+**Response 200**
+```json
+{
+  "id": "uuid",
+  "status": "bot_active",
+  "assignedOperatorId": null,
+  "updatedAt": "..."
+}
+```
+
+**Erros**
+- `404` — conversa não encontrada
+
+---
+
 ## Infraestrutura
 
 ### `POST /webhook`

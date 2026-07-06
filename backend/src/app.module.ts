@@ -9,6 +9,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
 import { RegisterModule } from './modules/register/register.module';
 import { ChannelsModule } from './modules/channels/channels.module';
+import { HandoffModule } from './modules/handoff/handoff.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 
 @Module({
@@ -22,6 +23,7 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
     TenantsModule,
     RegisterModule,
     ChannelsModule,
+    HandoffModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }],
 })
