@@ -1,7 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { User, users } from '../../database/schema/users';
 import { DB, DrizzleDB } from '../../database/database.module';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import * as bcrypt from 'bcrypt';
 
@@ -13,6 +13,11 @@ export interface CreateUserInput {
   email: string;
   password: string;
   role: string;
+}
+
+export interface UpdateUserInput {
+  name?: string;
+  role?: string;
 }
 
 @Injectable()
@@ -61,5 +66,45 @@ export class UsersService {
     const created = await this.findById(id);
     if (!created) throw new Error('Failed to create user');
     return created;
+  }
+
+  async findAllByTenant(tenantId: string): Promise<SafeUser[]> {
+    return this.db
+      .select({
+        id: users.id,
+        tenantId: users.tenantId,
+        email: users.email,
+        name: users.name,
+        role: users.role,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
+      .from(users)
+      .where(eq(users.tenantId, tenantId));
+  }
+
+  async update(id: string, tenantId: string, input: UpdateUserInput): Promise<SafeUser> {
+    const [updated] = await this.db
+      .update(users)
+      .set({ ...input, updatedAt: new Date() })
+      .where(and(eq(users.id, id), eq(users.tenantId, tenantId)))
+      .returning({
+        id: users.id,
+        tenantId: users.tenantId,
+        email: users.email,
+        name: users.name,
+        role: users.role,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      });
+
+    if (!updated) throw new NotFoundException('Usuário não encontrado');
+    return updated;
+  }
+
+  async remove(id: string, tenantId: string): Promise<void> {
+    await this.db
+      .delete(users)
+      .where(and(eq(users.id, id), eq(users.tenantId, tenantId)));
   }
 }

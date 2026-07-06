@@ -13,9 +13,21 @@ const mockInsert = {
   values: jest.fn().mockReturnThis(),
 };
 
+const mockUpdateChain = {
+  set: jest.fn().mockReturnThis(),
+  where: jest.fn().mockReturnThis(),
+  returning: jest.fn(),
+};
+
+const mockDeleteChain = {
+  where: jest.fn().mockResolvedValue(undefined),
+};
+
 const mockDb = {
   select: jest.fn().mockReturnValue(mockSelectChain),
   insert: jest.fn().mockReturnValue(mockInsert),
+  update: jest.fn().mockReturnValue(mockUpdateChain),
+  delete: jest.fn().mockReturnValue(mockDeleteChain),
 };
 
 describe('UsersService', () => {
@@ -23,8 +35,15 @@ describe('UsersService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    mockSelectChain.from.mockReturnThis();
+    mockSelectChain.where.mockReturnThis();
+    mockUpdateChain.set.mockReturnThis();
+    mockUpdateChain.where.mockReturnThis();
+    mockDeleteChain.where.mockResolvedValue(undefined);
     mockDb.select.mockReturnValue(mockSelectChain);
     mockDb.insert.mockReturnValue(mockInsert);
+    mockDb.update.mockReturnValue(mockUpdateChain);
+    mockDb.delete.mockReturnValue(mockDeleteChain);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [UsersService, { provide: DB, useValue: mockDb }],
@@ -109,6 +128,48 @@ describe('UsersService', () => {
 
       expect(result).not.toHaveProperty('passwordHash');
       expect(result.email).toBe('ana@empresa.com');
+    });
+  });
+
+  describe('findAllByTenant', () => {
+    it('returns all users for the tenant', async () => {
+      const fakeUsers = [
+        { id: 'u-1', tenantId: 'ten-1', email: 'a@a.com', name: 'A', role: 'operator' },
+        { id: 'u-2', tenantId: 'ten-1', email: 'b@b.com', name: 'B', role: 'tenant_admin' },
+      ];
+      mockSelectChain.where.mockResolvedValue(fakeUsers);
+
+      const result = await service.findAllByTenant('ten-1');
+
+      expect(result).toHaveLength(2);
+      expect(result[0].tenantId).toBe('ten-1');
+    });
+  });
+
+  describe('update', () => {
+    it('updates name and role and returns updated user', async () => {
+      const updated = { id: 'u-1', tenantId: 'ten-1', email: 'a@a.com', name: 'Novo Nome', role: 'tenant_admin' };
+      mockUpdateChain.returning.mockResolvedValue([updated]);
+
+      const result = await service.update('u-1', 'ten-1', { name: 'Novo Nome', role: 'tenant_admin' });
+
+      expect(result.name).toBe('Novo Nome');
+      expect(result.role).toBe('tenant_admin');
+    });
+
+    it('throws NotFoundException when user not found', async () => {
+      mockUpdateChain.returning.mockResolvedValue([]);
+
+      await expect(service.update('inexistente', 'ten-1', { name: 'X' })).rejects.toThrow('Usuário não encontrado');
+    });
+  });
+
+  describe('remove', () => {
+    it('deletes the user', async () => {
+      mockDeleteChain.where.mockResolvedValue(undefined);
+
+      await expect(service.remove('u-1', 'ten-1')).resolves.toBeUndefined();
+      expect(mockDb.delete).toHaveBeenCalled();
     });
   });
 });

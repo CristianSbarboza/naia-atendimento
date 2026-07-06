@@ -35,6 +35,97 @@ Autentica um usuário e retorna um JWT.
 
 ---
 
+## Usuários (Atendentes por Tenant)
+
+> Rotas aninhadas sob `/tenants/:tenantId/users`. Acessíveis por `tenant_admin` e `super_admin`. O `TenantScopeGuard` garante isolamento entre tenants.
+
+### `POST /tenants/:tenantId/users`
+Cria um novo atendente no tenant. O papel pode ser `operator` ou `tenant_admin`.
+
+| Campo | Valor |
+|---|---|
+| **Auth** | JWT obrigatório |
+| **Role** | `tenant_admin`, `super_admin` |
+
+**Body**
+```json
+{
+  "name": "João Silva",
+  "email": "joao@empresa.com",
+  "password": "senhaSegura123",
+  "role": "operator"
+}
+```
+
+**Response 201** — objeto SafeUser (sem `passwordHash`)
+
+**Erros**
+- `400` — dados inválidos
+
+---
+
+### `GET /tenants/:tenantId/users`
+Lista todos os usuários do tenant.
+
+| Campo | Valor |
+|---|---|
+| **Auth** | JWT obrigatório |
+| **Role** | `tenant_admin`, `super_admin` |
+
+**Response 200** — array de SafeUser
+
+---
+
+### `GET /tenants/:tenantId/users/:userId`
+Retorna um usuário específico.
+
+| Campo | Valor |
+|---|---|
+| **Auth** | JWT obrigatório |
+| **Role** | `tenant_admin`, `super_admin` |
+
+**Response 200** — objeto SafeUser
+
+**Erros**
+- `404` — usuário não encontrado
+
+---
+
+### `PATCH /tenants/:tenantId/users/:userId`
+Atualiza `name` e/ou `role` de um usuário.
+
+| Campo | Valor |
+|---|---|
+| **Auth** | JWT obrigatório |
+| **Role** | `tenant_admin`, `super_admin` |
+
+**Body** (todos os campos opcionais)
+```json
+{
+  "name": "Novo Nome",
+  "role": "tenant_admin"
+}
+```
+
+**Response 200** — objeto SafeUser atualizado
+
+**Erros**
+- `404` — usuário não encontrado
+
+---
+
+### `DELETE /tenants/:tenantId/users/:userId`
+Remove permanentemente o usuário.
+
+| Campo | Valor |
+|---|---|
+| **Auth** | JWT obrigatório |
+| **Role** | `tenant_admin`, `super_admin` |
+
+**Response 204** — sem corpo
+
+---
+
 ## Registro
 
 ### `POST /register`
