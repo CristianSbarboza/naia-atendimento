@@ -200,6 +200,126 @@ Desativa um tenant (define `status: inactive`). Não remove do banco.
 
 ---
 
+## Channels
+
+> Rotas aninhadas sob `/tenants/:tenantId/channels`. Acessíveis por `tenant_admin` do próprio tenant ou `super_admin`. O `TenantScopeGuard` garante que o `tenantId` da URL bate com o do token.
+
+### `POST /tenants/:tenantId/channels`
+Cria um canal de atendimento (WhatsApp ou Web Chat) para o tenant.
+
+| Campo | Valor |
+|---|---|
+| **Auth** | JWT obrigatório |
+| **Role** | `tenant_admin`, `super_admin` |
+| **Params** | `tenantId` — UUID do tenant |
+
+**Body**
+```json
+{
+  "type": "whatsapp",
+  "name": "WhatsApp Principal",
+  "instanceName": "minha-instancia",
+  "systemPrompt": "Você é um assistente...",
+  "config": {
+    "evolutionApiUrl": "https://api.exemplo.com",
+    "evolutionApiKey": "chave-secreta"
+  }
+}
+```
+
+**Response 201** — objeto Channel criado
+
+**Erros**
+- `400` — body inválido (type deve ser `whatsapp` ou `webchat`)
+
+---
+
+### `GET /tenants/:tenantId/channels`
+Lista todos os canais do tenant.
+
+| Campo | Valor |
+|---|---|
+| **Auth** | JWT obrigatório |
+| **Role** | `tenant_admin`, `super_admin` |
+| **Params** | `tenantId` — UUID do tenant |
+
+**Response 200**
+```json
+[
+  {
+    "id": "uuid",
+    "tenantId": "uuid",
+    "type": "whatsapp",
+    "name": "WhatsApp Principal",
+    "instanceName": "minha-instancia",
+    "systemPrompt": null,
+    "config": null,
+    "status": "active",
+    "createdAt": "...",
+    "updatedAt": "..."
+  }
+]
+```
+
+---
+
+### `GET /tenants/:tenantId/channels/:channelId`
+Retorna um canal específico do tenant.
+
+| Campo | Valor |
+|---|---|
+| **Auth** | JWT obrigatório |
+| **Role** | `tenant_admin`, `super_admin` |
+| **Params** | `tenantId`, `channelId` |
+
+**Response 200** — objeto Channel
+
+**Erros**
+- `404` — channel não encontrado
+
+---
+
+### `PATCH /tenants/:tenantId/channels/:channelId`
+Atualiza dados de um canal.
+
+| Campo | Valor |
+|---|---|
+| **Auth** | JWT obrigatório |
+| **Role** | `tenant_admin`, `super_admin` |
+| **Params** | `tenantId`, `channelId` |
+
+**Body** (todos os campos opcionais)
+```json
+{
+  "name": "Novo Nome",
+  "systemPrompt": "Novo prompt",
+  "status": "active"
+}
+```
+
+**Response 200** — objeto Channel atualizado
+
+**Erros**
+- `404` — channel não encontrado
+
+---
+
+### `DELETE /tenants/:tenantId/channels/:channelId`
+Desativa um canal (`status: inactive`). Não remove do banco.
+
+| Campo | Valor |
+|---|---|
+| **Auth** | JWT obrigatório |
+| **Role** | `tenant_admin`, `super_admin` |
+| **Params** | `tenantId`, `channelId` |
+
+**Response 200** — objeto Channel com `status: "inactive"`
+
+**Erros**
+- `404` — channel não encontrado
+
+---
+
 ## Infraestrutura
 
 ### `POST /webhook`
